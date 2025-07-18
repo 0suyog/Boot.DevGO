@@ -5,31 +5,35 @@ import (
 	"testing"
 )
 
-func TestGetMessageText(t *testing.T) {
+func Test(t *testing.T) {
 	type testCase struct {
-		initialAnalytics Analytics
-		newMessage       Message
-		expected         Analytics
+		messageIn *string
+		expected  *string
 	}
+	s1 := "English, motherfubber, do you speak it?"
+	s2 := "English, mother****er, do you speak it?"
+	s3 := "Does he look like a witch?"
+	s4 := "Does he look like a *****?"
 
 	runCases := []testCase{
 		{
-			initialAnalytics: Analytics{MessagesTotal: 0, MessagesFailed: 0, MessagesSucceeded: 0},
-			newMessage:       Message{Recipient: "mickey", Success: true},
-			expected:         Analytics{MessagesTotal: 1, MessagesFailed: 0, MessagesSucceeded: 1},
+			&s1,
+			&s2,
 		},
 		{
-			initialAnalytics: Analytics{MessagesTotal: 1, MessagesFailed: 0, MessagesSucceeded: 1},
-			newMessage:       Message{Recipient: "minnie", Success: false},
-			expected:         Analytics{MessagesTotal: 2, MessagesFailed: 1, MessagesSucceeded: 1},
+			nil,
+			nil,
 		},
 	}
 
 	submitCases := append(runCases, []testCase{
 		{
-			initialAnalytics: Analytics{MessagesTotal: 2, MessagesFailed: 1, MessagesSucceeded: 1},
-			newMessage:       Message{Recipient: "goofy", Success: false},
-			expected:         Analytics{MessagesTotal: 3, MessagesFailed: 2, MessagesSucceeded: 1},
+			&s3,
+			&s4,
+		},
+		{
+			nil,
+			nil,
 		},
 	}...)
 
@@ -44,40 +48,48 @@ func TestGetMessageText(t *testing.T) {
 	failCount := 0
 
 	for _, test := range testCases {
-		a := test.initialAnalytics
-		getMessageText(&a, test.newMessage)
-		if a != test.expected {
+		var original *string
+		if test.messageIn != nil {
+			originalVal := *test.messageIn
+			original = &originalVal
+		}
+		removeProfanity(test.messageIn)
+		if test.messageIn != nil &&
+			test.expected != nil &&
+			original != nil &&
+			*test.messageIn != *test.expected {
 			failCount++
 			t.Errorf(`---------------------------------
 Test Failed:
-  Initial Analytics:
-    MessagesTotal=%d, MessagesFailed=%d, MessagesSucceeded=%d
-  New Message:
-    Recipient=%s, Success=%v
-  Expected:
-    MessagesTotal=%d, MessagesFailed=%d, MessagesSucceeded=%d
-  Actual:
-    MessagesTotal=%d, MessagesFailed=%d, MessagesSucceeded=%d
-`, test.initialAnalytics.MessagesTotal, test.initialAnalytics.MessagesFailed, test.initialAnalytics.MessagesSucceeded,
-				test.newMessage.Recipient, test.newMessage.Success,
-				test.expected.MessagesTotal, test.expected.MessagesFailed, test.expected.MessagesSucceeded,
-				a.MessagesTotal, a.MessagesFailed, a.MessagesSucceeded)
+  input:    %v
+  expected: %v
+  actual:   %v
+`, *original, *test.expected, *test.messageIn)
+		} else if (test.messageIn == nil || test.expected == nil) &&
+			test.messageIn != test.expected {
+			failCount++
+			t.Errorf(`---------------------------------
+Test Failed:
+  input:    %v
+  expected: %v
+  actual:   %v
+`, original, test.expected, test.messageIn)
+		} else if test.messageIn == nil && test.expected == nil {
+			passCount++
+			fmt.Printf(`---------------------------------
+Test Passed:
+  input:    %v
+  expected: %v
+  actual:   %v
+`, original, test.expected, test.messageIn)
 		} else {
 			passCount++
 			fmt.Printf(`---------------------------------
 Test Passed:
-  Initial Analytics:
-    MessagesTotal=%d, MessagesFailed=%d, MessagesSucceeded=%d
-  New Message:
-    Recipient=%s, Success=%v
-  Expected:
-    MessagesTotal=%d, MessagesFailed=%d, MessagesSucceeded=%d
-  Actual:
-    MessagesTotal=%d, MessagesFailed=%d, MessagesSucceeded=%d
-`, test.initialAnalytics.MessagesTotal, test.initialAnalytics.MessagesFailed, test.initialAnalytics.MessagesSucceeded,
-				test.newMessage.Recipient, test.newMessage.Success,
-				test.expected.MessagesTotal, test.expected.MessagesFailed, test.expected.MessagesSucceeded,
-				a.MessagesTotal, a.MessagesFailed, a.MessagesSucceeded)
+  input:    %v
+  expected: %v
+  actual:   %v
+`, *original, *test.expected, *test.messageIn)
 		}
 	}
 
