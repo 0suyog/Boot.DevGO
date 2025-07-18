@@ -5,35 +5,43 @@ import (
 	"testing"
 )
 
-func Test(t *testing.T) {
+func TestSetMessage(t *testing.T) {
 	type testCase struct {
-		messageIn *string
-		expected  *string
+		e          email
+		newMessage string
+		expected   string
 	}
-	s1 := "English, motherfubber, do you speak it?"
-	s2 := "English, mother****er, do you speak it?"
-	s3 := "Does he look like a witch?"
-	s4 := "Does he look like a *****?"
 
 	runCases := []testCase{
 		{
-			&s1,
-			&s2,
+			email{
+				message:     "My name is Lt. Aldo Raine and I'm putting together a special team, and I need me eight soldiers.",
+				fromAddress: "lt.aldo.raine@mailio.com",
+				toAddress:   "army@mailio.com",
+			},
+			"You just say bingo.",
+			"You just say bingo.",
 		},
 		{
-			nil,
-			nil,
+			email{
+				message:     "Now, if one were to determine what attribute the German people share with a beast, it would be the cunning and the predatory instinct of a hawk.",
+				fromAddress: "col.hans.landa@mailio.com",
+				toAddress:   "lapadite@mailio.com",
+			},
+			"What a tremendously hostile world that a rat must endure.",
+			"What a tremendously hostile world that a rat must endure.",
 		},
 	}
 
 	submitCases := append(runCases, []testCase{
 		{
-			&s3,
-			&s4,
-		},
-		{
-			nil,
-			nil,
+			email{
+				message:     "Nazi ain't got no humanity. They're the foot soldiers of a Jew-hatin', mass murderin' maniac and they need to be dee-stroyed.",
+				fromAddress: "lt.aldo.raine@mailio.com",
+				toAddress:   "basterds@mailio.com",
+			},
+			"I think this just might be my masterpiece.",
+			"I think this just might be my masterpiece.",
 		},
 	}...)
 
@@ -48,48 +56,32 @@ func Test(t *testing.T) {
 	failCount := 0
 
 	for _, test := range testCases {
-		var original *string
-		if test.messageIn != nil {
-			originalVal := *test.messageIn
-			original = &originalVal
-		}
-		removeProfanity(test.messageIn)
-		if test.messageIn != nil &&
-			test.expected != nil &&
-			original != nil &&
-			*test.messageIn != *test.expected {
+		originalMessage := test.e.message
+		test.e.setMessage(test.newMessage)
+		if test.e.message != test.expected {
 			failCount++
 			t.Errorf(`---------------------------------
 Test Failed:
-  input:    %v
+  inputs:
+    * msg: %v
+    * newMessage: %v
+    * from: %v
+    * to: %v
   expected: %v
-  actual:   %v
-`, *original, *test.expected, *test.messageIn)
-		} else if (test.messageIn == nil || test.expected == nil) &&
-			test.messageIn != test.expected {
-			failCount++
-			t.Errorf(`---------------------------------
-Test Failed:
-  input:    %v
-  expected: %v
-  actual:   %v
-`, original, test.expected, test.messageIn)
-		} else if test.messageIn == nil && test.expected == nil {
-			passCount++
-			fmt.Printf(`---------------------------------
-Test Passed:
-  input:    %v
-  expected: %v
-  actual:   %v
-`, original, test.expected, test.messageIn)
+  actual: %v
+`, originalMessage, test.newMessage, test.e.fromAddress, test.e.toAddress, test.expected, test.e.message)
 		} else {
 			passCount++
 			fmt.Printf(`---------------------------------
 Test Passed:
-  input:    %v
+  inputs:
+    * msg: %v
+    * newMessage: %v
+    * from: %v
+    * to: %v
   expected: %v
-  actual:   %v
-`, *original, *test.expected, *test.messageIn)
+  actual: %v
+`, originalMessage, test.newMessage, test.e.fromAddress, test.e.toAddress, test.expected, test.e.message)
 		}
 	}
 
@@ -99,6 +91,7 @@ Test Passed:
 	} else {
 		fmt.Printf("%d passed, %d failed\n", passCount, failCount)
 	}
+
 }
 
 // withSubmit is set at compile time depending
