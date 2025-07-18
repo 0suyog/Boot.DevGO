@@ -13,4 +13,12 @@ type Message struct {
 
 // don't touch above this line
 
-// ?
+func getMessageText(analytics *Analytics,message Message ){
+	if message.Success{
+		analytics.MessagesSucceeded++
+	}else{
+		analytics.MessagesFailed++
+	}
+	analytics.MessagesTotal++
+}
+
