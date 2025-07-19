@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 )
 
-func test(text string) {
-	fmt.Println(text)
-}
+// func test(text string) {
+// 	fmt.Println(text)
+// }
 
-func main() {
-	test("starting Mailio server")
-	test("stopping Mailio server")
-}
+// func main() {
+// 	test("starting Mailio server")
+// 	test("stopping Mailio server")
+// }
