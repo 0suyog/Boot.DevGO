@@ -21,8 +21,8 @@ func test(message string) {
 	fmt.Println("========================")
 }
 
-func main() {
-	test("Hello there Kaladin!")
-	test("Hi there Shallan!")
-	test("Hey there Dalinar!")
-}
+// func main() {
+// 	test("Hello there Kaladin!")
+// 	test("Hi there Shallan!")
+// 	test("Hey there Dalinar!")
+// }
