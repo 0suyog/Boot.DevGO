@@ -2,24 +2,25 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 )
 
 func Test(t *testing.T) {
 	type testCase struct {
-		numBatches int
-		expected   int
+		n        int
+		expected []int
 	}
 
 	runCases := []testCase{
-		{3, 114},
-		{4, 198},
+		{5, []int{0, 1, 1, 2, 3}},
+		{3, []int{0, 1, 1}},
 	}
 
 	submitCases := append(runCases, []testCase{
-		{0, 0},
-		{1, 15},
-		{6, 435},
+		{0, []int{}},
+		{1, []int{0}},
+		{7, []int{0, 1, 1, 2, 3, 5, 8}},
 	}...)
 
 	testCases := runCases
@@ -33,25 +34,23 @@ func Test(t *testing.T) {
 	failCount := 0
 
 	for _, test := range testCases {
-		numSentCh := make(chan int)
-		go sendReports(test.numBatches, numSentCh)
-		output := countReports(numSentCh)
-		if output != test.expected {
+		actual := concurrentFib(test.n)
+		if !slices.Equal(actual, test.expected) {
 			failCount++
 			t.Errorf(`---------------------------------
 Test Failed:
-  numBatches: %v
-  expected:   %v
-  actual:     %v
-`, test.numBatches, test.expected, output)
+  n:        %v
+  expected: %v
+  actual:   %v
+`, test.n, test.expected, actual)
 		} else {
 			passCount++
 			fmt.Printf(`---------------------------------
 Test Passed:
-  numBatches: %v
-  expected:   %v
-  actual:     %v
-`, test.numBatches, test.expected, output)
+  n:        %v
+  expected: %v
+  actual:   %v
+`, test.n, test.expected, actual)
 		}
 	}
 
@@ -61,6 +60,7 @@ Test Passed:
 	} else {
 		fmt.Printf("%d passed, %d failed\n", passCount, failCount)
 	}
+
 }
 
 // withSubmit is set at compile time depending
