@@ -1,26 +1,23 @@
-
 package main
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 )
 
 func Test(t *testing.T) {
 	type testCase struct {
-		email string
-		count int
+		input    interface{}
+		expected interface{}
 	}
-
 	runCases := []testCase{
-		{"norman@bates.com", 23},
-		{"marion@bates.com", 67},
+		{[]int{}, 0},
+		{[]bool{true, false, true, true, false}, false},
 	}
 
 	submitCases := append(runCases, []testCase{
-		{"lila@bates.com", 31},
-		{"sam@bates.com", 453},
+		{[]int{1, 2, 3, 4}, 4},
+		{[]string{"a", "b", "c", "d"}, "d"},
 	}...)
 
 	testCases := runCases
@@ -30,52 +27,98 @@ func Test(t *testing.T) {
 
 	skipped := len(submitCases) - len(testCases)
 
-	passCount := 0
-	failCount := 0
+	passed, failed := 0, 0
 
 	for _, test := range testCases {
-		sc := safeCounter{
-			counts: make(map[string]int),
-			mu:     &sync.RWMutex{},
-		}
-		var wg sync.WaitGroup
-		for i := 0; i < test.count; i++ {
-			wg.Add(1)
-			go func(email string) {
-				sc.inc(email)
-				wg.Done()
-			}(test.email)
-		}
-		wg.Wait()
-
-		sc.mu.RLock()
-		defer sc.mu.RUnlock()
-		if output := sc.val(test.email); output != test.count {
-			failCount++
-			t.Errorf(`---------------------------------
+		switch v := test.input.(type) {
+		case []int:
+			if output := getLast(v); output != test.expected {
+				t.Errorf(`
+---------------------------------
 Test Failed:
-  email: %v
-  count: %v
-  expected count: %v
-  actual count:   %v
-`, test.email, test.count, test.count, output)
-		} else {
-			passCount++
-			fmt.Printf(`---------------------------------
+  input:    %v
+  expected: %v
+  actual:   %v
+`,
+					v,
+					test.expected,
+					output,
+				)
+				failed++
+			} else {
+				fmt.Printf(`
+---------------------------------
 Test Passed:
-  email: %v
-  count: %v
-  expected count: %v
-  actual count:   %v
-`, test.email, test.count, test.count, output)
+  input:    %v
+  expected: %v
+  actual:   %v
+`,
+					v,
+					test.expected,
+					output,
+				)
+				passed++
+			}
+		case []string:
+			if output := getLast(v); output != test.expected {
+				t.Errorf(`---------------------------------
+Test Failed:
+  input:    %v
+  expected: %v
+  actual:   %v
+`,
+					v,
+					test.expected,
+					output,
+				)
+				failed++
+			} else {
+				fmt.Printf(`---------------------------------
+Test Passed:
+  input:    %v
+  expected: %v
+  actual:   %v
+`,
+					v,
+					test.expected,
+					output,
+				)
+				passed++
+			}
+		case []bool:
+			if output := getLast(v); output != test.expected {
+				t.Errorf(`---------------------------------
+Test Failed:
+  input:    %v
+  expected: %v
+  actual:   %v
+`,
+					v,
+					test.expected,
+					output,
+				)
+				failed++
+			} else {
+				fmt.Printf(`---------------------------------
+Test Passed:
+  input:    %v
+  expected: %v
+  actual:   %v
+`,
+					v,
+					test.expected,
+					output,
+				)
+				passed++
+			}
 		}
 	}
 
 	fmt.Println("---------------------------------")
 	if skipped > 0 {
-		fmt.Printf("%d passed, %d failed, %d skipped\n", passCount, failCount, skipped)
+		fmt.Printf("%d passed, %d failed, %d skipped\n", passed, failed, skipped)
 	} else {
-		fmt.Printf("%d passed, %d failed\n", passCount, failCount)
+		fmt.Printf("%d passed, %d failed\n", passed, failed)
 	}
 
 }
