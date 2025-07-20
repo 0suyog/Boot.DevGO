@@ -1,26 +1,26 @@
+
 package main
 
 import (
 	"fmt"
-	"slices"
+	"sync"
 	"testing"
 )
 
 func Test(t *testing.T) {
 	type testCase struct {
-		n        int
-		expected []int
+		email string
+		count int
 	}
 
 	runCases := []testCase{
-		{5, []int{0, 1, 1, 2, 3}},
-		{3, []int{0, 1, 1}},
+		{"norman@bates.com", 23},
+		{"marion@bates.com", 67},
 	}
 
 	submitCases := append(runCases, []testCase{
-		{0, []int{}},
-		{1, []int{0}},
-		{7, []int{0, 1, 1, 2, 3, 5, 8}},
+		{"lila@bates.com", 31},
+		{"sam@bates.com", 453},
 	}...)
 
 	testCases := runCases
@@ -34,23 +34,40 @@ func Test(t *testing.T) {
 	failCount := 0
 
 	for _, test := range testCases {
-		actual := concurrentFib(test.n)
-		if !slices.Equal(actual, test.expected) {
+		sc := safeCounter{
+			counts: make(map[string]int),
+			mu:     &sync.RWMutex{},
+		}
+		var wg sync.WaitGroup
+		for i := 0; i < test.count; i++ {
+			wg.Add(1)
+			go func(email string) {
+				sc.inc(email)
+				wg.Done()
+			}(test.email)
+		}
+		wg.Wait()
+
+		sc.mu.RLock()
+		defer sc.mu.RUnlock()
+		if output := sc.val(test.email); output != test.count {
 			failCount++
 			t.Errorf(`---------------------------------
 Test Failed:
-  n:        %v
-  expected: %v
-  actual:   %v
-`, test.n, test.expected, actual)
+  email: %v
+  count: %v
+  expected count: %v
+  actual count:   %v
+`, test.email, test.count, test.count, output)
 		} else {
 			passCount++
 			fmt.Printf(`---------------------------------
 Test Passed:
-  n:        %v
-  expected: %v
-  actual:   %v
-`, test.n, test.expected, actual)
+  email: %v
+  count: %v
+  expected count: %v
+  actual count:   %v
+`, test.email, test.count, test.count, output)
 		}
 	}
 
